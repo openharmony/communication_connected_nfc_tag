@@ -58,7 +58,8 @@
                 "safwk",
                 "samgr",
                 "hdf_core",
-                "drivers_interface_connected_nfc_tag"
+                "drivers_interface_connected_nfc_tag",
+                "node"
             ],
             "third_party": [
             ]
