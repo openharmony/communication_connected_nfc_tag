@@ -61,56 +61,115 @@ static napi_value InitAsyncCallBackEnv(const napi_env& env, AsyncContext *asyncC
 static napi_value InitAsyncPromiseEnv(const napi_env& env, AsyncContext *asyncContext, napi_value& promise)
 {
     napi_deferred deferred;
-    NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
+    napi_status status = napi_create_promise(env, &deferred, &promise);
+    if (status != napi_ok) {
+        HILOGE("napi_create_promise failed");
+        return nullptr;
+    }
     asyncContext->deferred_ = deferred;
     return nullptr;
 }
 
+static void ExecuteAsyncCallback(napi_env env, void* data)
+{
+    if (data == nullptr) {
+        HILOGE("Async data parameter is null");
+        return;
+    }
+    AsyncContext *context = static_cast<AsyncContext *>(data);
+    context->executeFunc_(context);
+}
+
+static void CompleteAsyncCallback(napi_env env, napi_status status, void* data)
+{
+    if (data == nullptr) {
+        HILOGE("Async data parameter is null");
+        return;
+    }
+    AsyncContext *context = static_cast<AsyncContext *>(data);
+    context->completeFunc_(data);
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
+    napi_value callback = nullptr;
+    napi_value callbackValues[ARGS_TWO] = {nullptr};
+    napi_value result = nullptr;
+    callbackValues[0] = context->errorCode_ == NFC_SUCCESS ? undefined : context->result_;
+    callbackValues[1] = context->errorCode_ == NFC_SUCCESS ? context->result_ : undefined;
+    if (context->callback_ == nullptr) {
+        HILOGE("Callback reference is invalid");
+        napi_delete_async_work(env, context->work_);
+        delete context;
+        return;
+    }
+    napi_status refStatus = napi_get_reference_value(env, context->callback_, &callback);
+    if (refStatus != napi_ok || callback == nullptr) {
+        HILOGE("napi_get_reference_value failed, status: %{public}d", refStatus);
+        napi_delete_reference(env, context->callback_);
+        napi_delete_async_work(env, context->work_);
+        delete context;
+        return;
+    }
+    napi_valuetype callbackType = napi_undefined;
+    napi_typeof(env, callback, &callbackType);
+    if (callbackType != napi_function) {
+        HILOGE("callback is not a function, type: %{public}d", static_cast<int>(callbackType));
+        napi_delete_reference(env, context->callback_);
+        napi_delete_async_work(env, context->work_);
+        delete context;
+        return;
+    }
+    napi_call_function(env, nullptr, callback, ARGS_TWO, callbackValues, &result);
+    napi_delete_reference(env, context->callback_);
+    napi_delete_async_work(env, context->work_);
+    delete context;
+}
+
 static napi_value DoCallBackAsyncWork(const napi_env& env, AsyncContext *asyncContext)
 {
+    if (asyncContext == nullptr) {
+        HILOGE("asyncContext is nullptr");
+        napi_value result = nullptr;
+        napi_get_boolean(env, false, &result);
+        return result;
+    }
     napi_create_async_work(
         env,
         nullptr,
         asyncContext->resourceName_,
-        [](napi_env env, void* data) {
-            if (data == nullptr) {
-                HILOGE("Async data parameter is null");
-                return;
-            }
-            AsyncContext *context = static_cast<AsyncContext *>(data);
-            context->executeFunc_(context);
-        },
-        [](napi_env env, napi_status status, void* data) {
-            if (data == nullptr) {
-                HILOGE("Async data parameter is null");
-                return;
-            }
-            AsyncContext *context = static_cast<AsyncContext *>(data);
-            context->completeFunc_(data);
-            napi_value undefined;
-            napi_get_undefined(env, &undefined);
-            napi_value callback;
-            napi_value callbackValues[ARGS_TWO] = {nullptr};
-            napi_value result = nullptr;
-            callbackValues[0] = context->errorCode_ == NFC_SUCCESS ? undefined : context->result_;
-            callbackValues[1] = context->errorCode_ == NFC_SUCCESS ? context->result_ : undefined;
-            napi_get_reference_value(env, context->callback_, &callback);
-            napi_call_function(env, nullptr, callback, ARGS_TWO, callbackValues, &result);
-            if (context->callback_ != nullptr) {
-                napi_delete_reference(env, context->callback_);
-            }
-            napi_delete_async_work(env, context->work_);
-            delete context;
-        },
-        (void *)asyncContext,
+        ExecuteAsyncCallback,
+        CompleteAsyncCallback,
+        asyncContext,
         &asyncContext->work_);
-    NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work_));
+    if (status != napi_ok) {
+        HILOGE("napi_create_async_work failed, status: %{public}d", status);
+        if (asyncContext->callback_ != nullptr) {
+            napi_delete_reference(env, asyncContext->callback_);
+        }
+        delete asyncContext;
+        return nullptr;
+    }
+    status = napi_queue_async_work(env, asyncContext->work_);
+    if (status != napi_ok) {
+        HILOGE("napi_create_async_work failed, status: %{public}d", status);
+        if (asyncContext->callback_ != nullptr) {
+            napi_delete_reference(env, asyncContext->callback_);
+        }
+        napi_delete_async_work(env, asyncContext->callback_);
+        delete asyncContext;
+        return nullptr;
+    }
     return CreateUndefined(env);
 }
 
 static napi_value DoPromiseAsyncWork(const napi_env& env, AsyncContext *asyncContext)
 {
-    napi_create_async_work(
+    if (asyncContext == nullptr) {
+        HILOGE("asyncContext is nullptr");
+        napi_value result = nullptr;
+        napi_get_boolean(env, false, &result);
+        return result;
+    }
+    napi_status status = napi_create_async_work(
         env,
         nullptr,
         asyncContext->resourceName_,
@@ -137,9 +196,20 @@ static napi_value DoPromiseAsyncWork(const napi_env& env, AsyncContext *asyncCon
             napi_delete_async_work(env, context->work_);
             delete context;
         },
-        (void *)asyncContext,
+        asyncContext,
         &asyncContext->work_);
-    napi_queue_async_work(env, asyncContext->work_);
+    if (status != napi_ok) {
+        HILOGE("napi_create_async_work failed");
+        delete asyncContext;
+        return nullptr;
+    }
+    status = napi_queue_async_work(env, asyncContext->work_);
+    if (status != napi_ok) {
+        HILOGE("napi_create_async_work failed, status: %{public}d", status);
+        napi_delete_async_work(env, asyncContext->callback_);
+        delete asyncContext;
+        return nullptr;
+    }
     return CreateUndefined(env);
 }
 
@@ -188,7 +258,11 @@ napi_status ParseByteArray(napi_env env, napi_value array, std::vector<uint8_t> 
 {
     bool isArray = false;
     napi_status status = napi_is_array(env, array, &isArray);
-    if (!isArray || status != napi_ok) {
+    if (status != napi_ok) {
+        HILOGE("napi_is_array failed");
+        return napi_invalid_arg;
+    }
+    if (!isArray) {
         HILOGE("not array");
         return napi_invalid_arg;
     }

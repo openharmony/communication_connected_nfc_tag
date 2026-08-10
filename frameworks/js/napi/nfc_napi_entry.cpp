@@ -84,7 +84,7 @@ static napi_module nfcConnectedTagModule = {
     .nm_filename = NULL,
     .nm_register_func = InitJs,
     .nm_modname = "connectedTag", // modname MUST matched with the file name of connectedTag.d.ts of js apis.
-    .nm_priv = ((void *)0),
+    .nm_priv = nullptr,
     .reserved = { 0 }
 };
 
