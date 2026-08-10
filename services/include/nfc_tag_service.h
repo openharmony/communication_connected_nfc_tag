@@ -37,6 +37,7 @@ public:
     virtual ~NfcTagCallBackManager() {}
     ErrCode RegisterListener(sptr<INfcTagCallback> listener);
     ErrCode UnRegisterListener(sptr<INfcTagCallback> listener);
+    void ClearAllListeners();
 
 public:
     ErrCode OnNotify(int nfcRfState) override;

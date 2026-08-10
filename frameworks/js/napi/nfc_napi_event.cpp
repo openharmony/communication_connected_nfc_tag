@@ -113,22 +113,36 @@ napi_value On(napi_env env, napi_callback_info cbinfo)
     size_t argc = ARGC_TWO;
     napi_value argv[ARGC_TWO] = {0};
     napi_value thisVar = 0;
-    napi_get_cb_info(env, cbinfo, &argc, argv, &thisVar, nullptr);
+    if (napi_get_cb_info(env, cbinfo, &argc, argv, &thisVar, nullptr) != napi_ok) {
+        HILOGE("napi_get_cb_info failed");
+        napi_value result = nullptr;
+        napi_get_boolean(env, false, &result);
+        return result;
+    }
     napi_valuetype eventName = napi_undefined;
-    napi_typeof(env, argv[0], &eventName);
     napi_valuetype handler = napi_undefined;
-    napi_typeof(env, argv[1], &handler);
+    if (napi_typeof(env, argv[0], &eventName) != napi_ok || napi_typeof(env, argv[1], &handler) != napi_ok) {
+        HILOGE("napi_typeof failed");
+        napi_value result = nullptr;
+        napi_get_boolean(env, false, &result);
+        return result;
+    }
 
     if (argc != ARGC_TWO || eventName != napi_string || handler != napi_function) {
         HILOGE("On args invalid, failed!");
-        napi_value result;
+        napi_value result = nullptr;
         napi_get_boolean(env, false, &result);
         return result;
     }
 
     char type[NOTIFY_TYPE_LEN] = {0};
     size_t typeLen = 0;
-    napi_get_value_string_utf8(env, argv[0], type, sizeof(type), &typeLen);
+    if (napi_get_value_string_utf8(env, argv[0], type, sizeof(type), &typeLen) != napi_ok) {
+        HILOGE("napi_get_value_string_utf8 failed");
+        napi_value result = nullptr;
+        napi_get_boolean(env, false, &result);
+        return result;
+    }
     EventRegister::GetInstance().Register(env, type, argv[1]);
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -167,7 +181,12 @@ napi_value Off(napi_env env, napi_callback_info cbinfo)
 
     char type[NOTIFY_TYPE_LEN] = {0};
     size_t typeLen = 0;
-    napi_get_value_string_utf8(env, argv[0], type, sizeof(type), &typeLen);
+    if (napi_get_value_string_utf8(env, argv[0], type, sizeof(type), &typeLen) != napi_ok) {
+        HILOGE("napi_get_value_string_utf8 failed");
+        napi_value result = nullptr;
+        napi_get_boolean(env, false, &result);
+        return result;
+    }
     EventRegister::GetInstance().Unregister(env, type, argc >= ARGC_TWO ? argv[1] : nullptr);
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -223,15 +242,29 @@ void EventRegister::Register(const napi_env& env, const std::string& type, napi_
         return;
     }
     std::unique_lock<std::shared_mutex> guard(NFC::g_regInfoMutex);
-    RegisterNfcEvents();
+    ErrCode ret = RegisterNfcEvents();
+    if (ret != NFC_SUCCESS) {
+        HILOGE("RegisterNfcEvents failed: %{public}d", ret);
+        return;
+    }
     napi_ref handlerRef = nullptr;
-    napi_create_reference(env, handler, 1, &handlerRef);
+    napi_status status = napi_create_reference(env, handler, 1, &handlerRef);
+    if (status != napi_ok || handlerRef == nullptr) {
+        HILOGE("napi_create_reference failed");
+        return;
+    }
     RegObj regObj(env, handlerRef);
     auto iter = NFC::g_eventRegisterInfo.find(type);
     if (iter == NFC::g_eventRegisterInfo.end()) {
         NFC::g_eventRegisterInfo[type] = std::vector<RegObj> {regObj};
     } else {
+        size_t oldSize = iter->second.size();
         iter->second.emplace_back(regObj);
+        if (iter->second.size() <= oldSize) {
+            napi_delete_reference(env, handlerRef);
+            HILOGE("emplace_back failed");
+            return;
+        }
     }
 }
 

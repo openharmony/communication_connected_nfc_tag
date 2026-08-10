@@ -91,6 +91,7 @@ sptr<INfcTagService> NfcTagClient::GetService()
     sptr<IRemoteObject> object = samgr->CheckSystemAbility(NFC_CONNECTED_TAG_ABILITY_ID);
     NFC_CHECK_RETURN_RET(object != nullptr, nullptr, "object is nullptr");
     serviceProxy_ = iface_cast<INfcTagService>(object);
+    NFC_CHECK_RETURN_RET(serviceProxy_ != nullptr, nullptr, "iface_cast failed, serviceProxy_ is nullptr");
     return serviceProxy_;
 }
 

@@ -228,6 +228,10 @@ ErrCode NfcTagHdiImpl::RegisterCallBack(sptr<INfcTagCallback> listener)
         HILOGE("nfcTagProxy == nullptr");
         return NFC_NO_HDI_PROXY;
     }
+    if (g_nfcTagHdiCallBack == nullptr) {
+        HILOGE("g_nfcTagHdiCallBack == nullptr");
+        return NFC_NO_CALLBACK;
+    }
     ErrCode errCode = g_nfcTagHdiCallBack->RegisterUpperCallBack(listener);
     if (errCode != NFC_SUCCESS) {
         return errCode;
@@ -250,13 +254,17 @@ ErrCode NfcTagHdiImpl::UnRegisterCallBack(sptr<INfcTagCallback> listener)
         HILOGE("nfcTagProxy == nullptr");
         return NFC_NO_HDI_PROXY;
     }
+    if (g_nfcTagHdiCallBack == nullptr) {
+        HILOGE("g_nfcTagHdiCallBack == nullptr");
+        return NFC_NO_CALLBACK;
+    }
     ErrCode errCode = g_nfcTagHdiCallBack->UnRegisterUpperCallBack(listener);
     if (errCode != NFC_SUCCESS) {
         return errCode;
     }
     int32_t ret = nfcTagProxy->RegisterCallBack(nullptr);
     if (ret != 0) {
-        HILOGE("UnRegisterCallBack %{public}d", ret);
+        HILOGE("UnRegisterCallBack failed, ret: %{public}d", ret);
     }
     return NFC_SUCCESS;
 }

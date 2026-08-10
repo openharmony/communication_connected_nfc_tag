@@ -39,7 +39,12 @@ ErrCode NfcTagCallBackProxy::OnNotify(int nfcRfState)
         return NFC_IPC_WRITE_FAILED;
     }
 
-    int error = Remote()->SendRequest(CMD_ON_NFC_TAG_NOTIFY, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return NFC_IPC_SEND_FAILED;
+    }
+    int error = remote()->SendRequest(CMD_ON_NFC_TAG_NOTIFY, data, reply, option);
     if (error != ERR_NONE) {
         HILOGE("Set Attr(%{public}d) failed,error code is %{public}d", CMD_ON_NFC_TAG_NOTIFY, error);
         return NFC_IPC_SEND_FAILED;
