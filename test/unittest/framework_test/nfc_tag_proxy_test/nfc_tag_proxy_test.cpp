@@ -210,19 +210,33 @@ HWTEST_F(NfcTagProxyTest, NfcTagProxyTest_Init_003, TestSize.Level0)
  * @tc.number: NfcTagProxyTest_Init_004
  * @tc.name: NfcTagProxyTest_Init_004
  * @tc.desc: return NFC_SUCCESS
-*/
+ */
 HWTEST_F(NfcTagProxyTest, NfcTagProxyTest_Init_004, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "NfcTagProxyTest_Init_004 start";
-    MessageParcel::writeTokenRetMock_ = false;
     sptr<NfcTagService> stubTest = new NfcTagService();
     NfcTagProxy proxy(stubTest);
     proxy.remoteDied_ = false;
     MessageParcel::writeTokenRetMock_ = true;
     IPCObjectStub::sendRequestRetMock_ = 0;
-    MessageParcel::readInt32Mock_ = 0;
+    MessageParcel::readRetMock_ = true;
     EXPECT_EQ(proxy.Init(), NFC_SUCCESS);
     GTEST_LOG_(INFO) << "NfcTagProxyTest_Init_004 end";
+}
+
+/*
+ * @tc.number: NfcTagProxyTest_Init_005
+ * @tc.name: NfcTagProxyTest_Init_005
+ * @tc.desc: return NFC_IPC_SEND_FAILED
+ */
+HWTEST_F(NfcTagProxyTest, NfcTagProxyTest_Init_005, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "NfcTagProxyTest_Init_005 start";
+    sptr<NfcTagService> stubTest = nullptr;
+    NfcTagProxy proxy(stubTest);
+    proxy.remoteDied_ = false;
+    EXPECT_EQ(proxy.Init(), NFC_IPC_SEND_FAILED);
+    GTEST_LOG_(INFO) << "NfcTagProxyTest_Init_005 end";
 }
 
 /*
@@ -283,19 +297,51 @@ HWTEST_F(NfcTagProxyTest, NfcTagProxyTest_UnInit_003, TestSize.Level0)
  * @tc.number: NfcTagProxyTest_UnInit_004
  * @tc.name: NfcTagProxyTest_UnInit_004
  * @tc.desc: return NFC_SUCCESS
-*/
+ */
 HWTEST_F(NfcTagProxyTest, NfcTagProxyTest_UnInit_004, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "NfcTagProxyTest_UnInit_004 start";
-    MessageParcel::writeTokenRetMock_ = false;
     sptr<NfcTagService> stubTest = new NfcTagService();
     NfcTagProxy proxy(stubTest);
     proxy.remoteDied_ = false;
     MessageParcel::writeTokenRetMock_ = true;
     IPCObjectStub::sendRequestRetMock_ = 0;
-    MessageParcel::readInt32Mock_ = 0;
+    MessageParcel::readRetMock_ = true;
     EXPECT_EQ(proxy.Uninit(), NFC_SUCCESS);
     GTEST_LOG_(INFO) << "NfcTagProxyTest_UnInit_004 end";
+}
+
+/*
+ * @tc.number: NfcTagProxyTest_UnInit_005
+ * @tc.name: NfcTagProxyTest_UnInit_005
+ * @tc.desc: return NFC_IPC_SEND_FAILED
+ */
+HWTEST_F(NfcTagProxyTest, NfcTagProxyTest_UnInit_005, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "NfcTagProxyTest_UnInit_005 start";
+    sptr<NfcTagService> stubTest = nullptr;
+    NfcTagProxy proxy(stubTest);
+    proxy.remoteDied_ = false;
+    EXPECT_EQ(proxy.Uninit(), NFC_IPC_SEND_FAILED);
+    GTEST_LOG_(INFO) << "NfcTagProxyTest_UnInit_005 end";
+}
+
+/*
+ * @tc.number: NfcTagProxyTest_UnInit_006
+ * @tc.name: NfcTagProxyTest_UnInit_006
+ * @tc.desc: return NFC_IPC_SEND_FAILED
+ */
+HWTEST_F(NfcTagProxyTest, NfcTagProxyTest_UnInit_006, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "NfcTagProxyTest_UnInit_006 start";
+    sptr<NfcTagService> stubTest = new NfcTagService();
+    NfcTagProxy proxy(stubTest);
+    proxy.remoteDied_ = false;
+    MessageParcel::writeTokenRetMock_ = true;
+    IPCObjectStub::sendRequestRetMock_ = 0;
+    MessageParcel::readRetMock_ = false;
+    EXPECT_EQ(proxy.Uninit(), NFC_IPC_SEND_FAILED);
+    GTEST_LOG_(INFO) << "NfcTagProxyTest_UnInit_006 end";
 }
 
 /*
@@ -359,7 +405,7 @@ HWTEST_F(NfcTagProxyTest, NfcTagProxyTest_ReadNdefTag_003, TestSize.Level0)
  * @tc.number: NfcTagProxyTest_ReadNdefTag_004
  * @tc.name: NfcTagProxyTest_ReadNdefTag_004
  * @tc.desc: return NFC_IPC_READ_FAILED
-*/
+ */
 HWTEST_F(NfcTagProxyTest, NfcTagProxyTest_ReadNdefTag_004, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "NfcTagProxyTest_ReadNdefTag_004 start";
@@ -833,21 +879,40 @@ HWTEST_F(NfcTagProxyTest, NfcTagProxyTest_RegListener_005, TestSize.Level0)
  * @tc.number: NfcTagProxyTest_RegListener_006
  * @tc.name: NfcTagProxyTest_RegListener_006
  * @tc.desc: return NFC_SUCCESS
-*/
+ */
 HWTEST_F(NfcTagProxyTest, NfcTagProxyTest_RegListener_006, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "NfcTagProxyTest_RegListener_006 start";
-    MessageParcel::writeTokenRetMock_ = false;
     sptr<NfcTagService> stubTest = new NfcTagService();
     NfcTagProxy proxy(stubTest);
     proxy.remoteDied_ = false;
     MessageParcel::writeTokenRetMock_ = true;
     MessageParcel::writeRemoteRetMock_ = true;
     IPCObjectStub::sendRequestRetMock_ = 0;
-    MessageParcel::readInt32Mock_ = 0;
+    MessageParcel::readRetMock_ = true;
     sptr<NfcTagCallbackStub> callback = new NfcTagCallbackStub();
     EXPECT_EQ(proxy.RegListener(callback), NFC_SUCCESS);
     GTEST_LOG_(INFO) << "NfcTagProxyTest_RegListener_006 end";
+}
+
+/*
+ * @tc.number: NfcTagProxyTest_RegListener_007
+ * @tc.name: NfcTagProxyTest_RegListener_007
+ * @tc.desc: return NFC_IPC_SEND_FAILED
+ */
+HWTEST_F(NfcTagProxyTest, NfcTagProxyTest_RegListener_007, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "NfcTagProxyTest_RegListener_007 start";
+    sptr<NfcTagService> stubTest = new NfcTagService();
+    NfcTagProxy proxy(stubTest);
+    proxy.remoteDied_ = false;
+    MessageParcel::writeTokenRetMock_ = true;
+    MessageParcel::writeRemoteRetMock_ = true;
+    IPCObjectStub::sendRequestRetMock_ = 0;
+    MessageParcel::readRetMock_ = false;
+    sptr<NfcTagCallbackStub> callback = new NfcTagCallbackStub();
+    EXPECT_EQ(proxy.RegListener(callback), NFC_IPC_SEND_FAILED);
+    GTEST_LOG_(INFO) << "NfcTagProxyTest_RegListener_007 end";
 }
 
 /*
@@ -946,24 +1011,61 @@ HWTEST_F(NfcTagProxyTest, NfcTagProxyTest_UnregListener_005, TestSize.Level0)
 }
 
 /*
+ * @tc.number: NfcTagProxyTest_Init_006
+ * @tc.name: NfcTagProxyTest_Init_006
+ * @tc.desc: return NFC_IPC_SEND_FAILED
+*/
+HWTEST_F(NfcTagProxyTest, NfcTagProxyTest_Init_006, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "NfcTagProxyTest_Init_006 start";
+    sptr<NfcTagService> stubTest = new NfcTagService();
+    NfcTagProxy proxy(stubTest);
+    proxy.remoteDied_ = false;
+    MessageParcel::writeTokenRetMock_ = true;
+    IPCObjectStub::sendRequestRetMock_ = 0;
+    MessageParcel::readRetMock_ = false;
+    EXPECT_EQ(proxy.Init(), NFC_IPC_SEND_FAILED);
+    GTEST_LOG_(INFO) << "NfcTagProxyTest_Init_006 end";
+}
+
+/*
  * @tc.number: NfcTagProxyTest_UnregListener_006
  * @tc.name: NfcTagProxyTest_UnregListener_006
  * @tc.desc: return NFC_SUCCESS
-*/
+ */
 HWTEST_F(NfcTagProxyTest, NfcTagProxyTest_UnregListener_006, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "NfcTagProxyTest_UnregListener_006 start";
-    MessageParcel::writeTokenRetMock_ = false;
     sptr<NfcTagService> stubTest = new NfcTagService();
     NfcTagProxy proxy(stubTest);
     proxy.remoteDied_ = false;
     MessageParcel::writeTokenRetMock_ = true;
     MessageParcel::writeRemoteRetMock_ = true;
     IPCObjectStub::sendRequestRetMock_ = 0;
-    MessageParcel::readInt32Mock_ = 0;
+    MessageParcel::readRetMock_ = true;
     sptr<NfcTagCallbackStub> callback = new NfcTagCallbackStub();
     EXPECT_EQ(proxy.UnregListener(callback), NFC_SUCCESS);
     GTEST_LOG_(INFO) << "NfcTagProxyTest_UnregListener_006 end";
+}
+
+/*
+ * @tc.number: NfcTagProxyTest_UnregListener_007
+ * @tc.name: NfcTagProxyTest_UnregListener_007
+ * @tc.desc: return NFC_IPC_SEND_FAILED
+ */
+HWTEST_F(NfcTagProxyTest, NfcTagProxyTest_UnregListener_007, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "NfcTagProxyTest_UnregListener_007 start";
+    sptr<NfcTagService> stubTest = new NfcTagService();
+    NfcTagProxy proxy(stubTest);
+    proxy.remoteDied_ = false;
+    MessageParcel::writeTokenRetMock_ = true;
+    MessageParcel::writeRemoteRetMock_ = true;
+    IPCObjectStub::sendRequestRetMock_ = 0;
+    MessageParcel::readRetMock_ = false;
+    sptr<NfcTagCallbackStub> callback = new NfcTagCallbackStub();
+    EXPECT_EQ(proxy.UnregListener(callback), NFC_IPC_SEND_FAILED);
+    GTEST_LOG_(INFO) << "NfcTagProxyTest_UnregListener_007 end";
 }
 
 /*

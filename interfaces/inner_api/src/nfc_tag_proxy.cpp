@@ -36,6 +36,14 @@ NfcTagProxy::NfcTagProxy(const sptr<IRemoteObject> &impl)
 }
 NfcTagProxy::~NfcTagProxy()
 {
+    HILOGI("enter");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+    }
+    if (remote && remote->IsProxyObject()) {
+        remote->RemoveDeathRecipient(this);
+    }
 }
 
 ErrCode NfcTagProxy::Init()
@@ -44,6 +52,11 @@ ErrCode NfcTagProxy::Init()
         HILOGE("remote service is died!");
         return NFC_REMOTE_DIED;
     }
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return NFC_IPC_SEND_FAILED;
+    }
     MessageOption option;
     MessageParcel data;
     MessageParcel reply;
@@ -52,13 +65,18 @@ ErrCode NfcTagProxy::Init()
         return NFC_IPC_WRITETOKE_FAILED;
     }
 
-    int error = Remote()->SendRequest(NFC_TAG_CMD_INIT, data, reply, option);
+    int error = remote->SendRequest(NFC_TAG_CMD_INIT, data, reply, option);
     if (error != ERR_NONE) {
         HILOGE("Init failed, error code is %{public}d", error);
         return NFC_IPC_SEND_FAILED;
     }
 
-    return ErrCode(reply.ReadInt32());
+    int32_t resultCode;
+    if (!reply.ReadInt32(resultCode)) {
+        HILOGE("ReadInt32 failed");
+        return NFC_IPC_SEND_FAILED;
+    }
+    return ErrCode(resultCode);
 }
 ErrCode NfcTagProxy::Uninit()
 {
@@ -66,6 +84,11 @@ ErrCode NfcTagProxy::Uninit()
         HILOGE("remote service is died!");
         return NFC_REMOTE_DIED;
     }
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return NFC_IPC_SEND_FAILED;
+    }
     MessageOption option;
     MessageParcel data;
     MessageParcel reply;
@@ -74,13 +97,18 @@ ErrCode NfcTagProxy::Uninit()
         return NFC_IPC_WRITETOKE_FAILED;
     }
 
-    int error = Remote()->SendRequest(NFC_TAG_CMD_UNINIT, data, reply, option);
+    int error = remote->SendRequest(NFC_TAG_CMD_UNINIT, data, reply, option);
     if (error != ERR_NONE) {
         HILOGE("Uninit failed, error code is %{public}d", error);
         return NFC_IPC_SEND_FAILED;
     }
 
-    return ErrCode(reply.ReadInt32());
+    int32_t resultCode;
+    if (!reply.ReadInt32(resultCode)) {
+        HILOGE("ReadInt32 failed");
+        return NFC_IPC_SEND_FAILED;
+    }
+    return ErrCode(resultCode);
 }
 ErrCode NfcTagProxy::ReadNdefTag(std::string &response)
 {
@@ -101,7 +129,11 @@ ErrCode NfcTagProxy::ReadNdefTag(std::string &response)
         HILOGE("ReadNdefTag failed, error code is %{public}d", error);
         return NFC_IPC_SEND_FAILED;
     }
-    int result = reply.ReadInt32();
+    int32_t result;
+    if (!reply.ReadInt32(result)) {
+        HILOGE("ReadInt32 failed");
+        return NFC_IPC_READ_FAILED;
+    }
     if (!reply.ReadString(response)) {
         HILOGE("ipc ReadString failed");
         return NFC_IPC_READ_FAILED;
@@ -137,7 +169,12 @@ ErrCode NfcTagProxy::WriteNdefTag(const std::string &tagData)
         return NFC_IPC_SEND_FAILED;
     }
 
-    return ErrCode(reply.ReadInt32());
+    int32_t resultCode;
+    if (!reply.ReadInt32(resultCode)) {
+        HILOGE("ReadInt32 failed");
+        return NFC_IPC_SEND_FAILED;
+    }
+    return ErrCode(resultCode);
 }
 
 ErrCode NfcTagProxy::ReadNdefData(std::vector<uint8_t> &data)
@@ -145,6 +182,11 @@ ErrCode NfcTagProxy::ReadNdefData(std::vector<uint8_t> &data)
     if (remoteDied_) {
         HILOGE("remote service is died!");
         return NFC_REMOTE_DIED;
+    }
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return NFC_IPC_SEND_FAILED;
     }
     MessageOption option;
     MessageParcel parcelData;
@@ -154,13 +196,17 @@ ErrCode NfcTagProxy::ReadNdefData(std::vector<uint8_t> &data)
         return NFC_IPC_WRITETOKE_FAILED;
     }
 
-    int error = Remote()->SendRequest(NFC_TAG_CMD_READ_NDEF_DATA, parcelData, reply, option);
+    int error = remote->SendRequest(NFC_TAG_CMD_READ_NDEF_DATA, parcelData, reply, option);
     if (error != ERR_NONE) {
         HILOGE("ReadNdefTag failed, error code is %{public}d", error);
         return NFC_IPC_SEND_FAILED;
     }
 
-    int result = reply.ReadInt32();
+    int32_t result;
+    if (!reply.ReadInt32(result)) {
+        HILOGE("ReadInt32 failed");
+        return NFC_IPC_SEND_FAILED;
+    }
     if (!reply.ReadUInt8Vector(&data)) {
         HILOGE("ReadUInt8Vector random error");
         return NFC_IPC_READ_FAILED;
@@ -197,7 +243,12 @@ ErrCode NfcTagProxy::WriteNdefData(const std::vector<uint8_t> &data)
         return NFC_IPC_SEND_FAILED;
     }
 
-    return ErrCode(reply.ReadInt32());
+    int32_t resultCode;
+    if (!reply.ReadInt32(resultCode)) {
+        HILOGE("ReadInt32 failed");
+        return NFC_IPC_SEND_FAILED;
+    }
+    return ErrCode(resultCode);
 }
 
 ErrCode NfcTagProxy::RegListener(const sptr<INfcTagCallback> &callback)
@@ -237,7 +288,12 @@ ErrCode NfcTagProxy::RegListener(const sptr<INfcTagCallback> &callback)
         return NFC_IPC_SEND_FAILED;
     }
 
-    return ErrCode(reply.ReadInt32());
+    int32_t resultCode;
+    if (!reply.ReadInt32(resultCode)) {
+        HILOGE("ReadInt32 failed");
+        return NFC_IPC_SEND_FAILED;
+    }
+    return ErrCode(resultCode);
 }
 ErrCode NfcTagProxy::UnregListener(const sptr<INfcTagCallback> &callback)
 {
@@ -276,7 +332,12 @@ ErrCode NfcTagProxy::UnregListener(const sptr<INfcTagCallback> &callback)
         return NFC_IPC_SEND_FAILED;
     }
 
-    return ErrCode(reply.ReadInt32());
+    int32_t resultCode;
+    if (!reply.ReadInt32(resultCode)) {
+        HILOGE("ReadInt32 failed");
+        return NFC_IPC_SEND_FAILED;
+    }
+    return ErrCode(resultCode);
 }
 
 void NfcTagProxy::OnRemoteDied(const wptr<IRemoteObject> &remoteObject)
