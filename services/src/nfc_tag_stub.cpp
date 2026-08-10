@@ -18,6 +18,7 @@
 #include "nfc_tag_log.h"
 #include "nfc_tag_errcode.h"
 #include "nfc_tag_callback_proxy.h"
+#include "nfc_tag_utils.h"
 
 namespace OHOS {
 namespace NFC {
@@ -106,7 +107,7 @@ ErrCode NfcTagStub::OnWriteNdefTag(uint32_t code, MessageParcel &data, MessagePa
         return NFC_INVALID_PARAMETER;
     }
     ErrCode ret = WriteNdefTag(dataToWrite);
-    reply.WriteInt32(dataLen);
+    reply.WriteInt32(static_cast<int32_t>(ret));
     return ret;
 }
 

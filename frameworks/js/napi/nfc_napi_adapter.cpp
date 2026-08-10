@@ -83,8 +83,16 @@ napi_value ReadNdefTag(napi_env env, napi_callback_info info)
     asyncContext->completeFunc_ = [&](void* data) -> void {
         ReadAsyncContext *context = static_cast<ReadAsyncContext *>(data);
         if (context->errorCode_ == NFC_SUCCESS) {
-            napi_create_string_utf8(context->env_, context->respNdefData_.c_str(), NAPI_AUTO_LENGTH, &context->result_);
-            HILOGI("ReadNdefTag len = %{public}zu", context->respNdefData_.length());
+            napi_status status = napi_create_string_utf8(context->env_,
+                context->respNdefData_.c_str(), context->readNdefData_.length(), &context->result_);
+            if (status != napi_ok) {
+                HILOGE("napi_create_string_utf8 failed, status: %{public}d", status);
+                context->errorCode_ = NFC_INVALID_PARAMETER;
+                int businessCode = FormatErrorCode(context->errorCode_);
+                context->result_ = GenerateBusinessError(context->env_, businessCode, BuildErrorMessage(businessCode));
+            } else {
+                HILOGI("ReadNdefTag len = %{public}zu", context->respNdefData_.length());
+            }
         } else {
             int businessCode = FormatErrorCode(context->errorCode_);
             context->result_ = GenerateBusinessError(context->env_, businessCode, BuildErrorMessage(businessCode));

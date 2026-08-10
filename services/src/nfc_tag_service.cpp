@@ -92,6 +92,12 @@ ErrCode NfcTagCallBackManager::OnNotify(int nfcRfState)
     return NFC_SUCCESS;
 }
 
+void NfcTagCallBackManager::ClearAllListeners()
+{
+    std::lock_guard<std::mutex> lock(listenerMapLock_);
+    listenerMap_.clear();
+}
+
 NfcTagService::NfcTagService(int32_t saId, bool runOnCreate)
     : SystemAbility(saId, runOnCreate), published_(false),
     state_(ServiceRunningState::STATE_NOT_START), callbackManager_(nullptr)
@@ -126,6 +132,12 @@ void NfcTagService::OnStart()
 void NfcTagService::OnStop()
 {
     HILOGI("enter");
+    std::lock_guard<std::mutex> lock(callbackMutex_);
+    if (callbackManager_ != nullptr) {
+        hdiAdapter_.UnRegisterCallBack(callbackManager_);
+        callbackManager_->ClearAllListeners();
+        callbackManager_ = nullptr;
+    }
     state_ = ServiceRunningState::STATE_NOT_START;
     published_ = false;
     HILOGI("Stop service!");
@@ -222,6 +234,10 @@ ErrCode NfcTagService::RegListener(const sptr<INfcTagCallback> &callback)
     if (ret != NFC_SUCCESS) {
         return ret;
     }
+    if (callback == nullptr) {
+        HILOGE("callback == nullptr");
+        return NFC_INVALID_CALLBACK;
+    }
     std::lock_guard<std::mutex> lock(callbackMutex_);
     if (callbackManager_ == nullptr) {
         callbackManager_ = sptr<NfcTagCallBackManager>::MakeSptr();
@@ -246,6 +262,10 @@ ErrCode NfcTagService::UnregListener(const sptr<INfcTagCallback> &callback)
     ErrCode ret = VerifyPermissionsBeforeEntry();
     if (ret != NFC_SUCCESS) {
         return ret;
+    }
+    if (callback == nullptr) {
+        HILOGE("callback == nullptr");
+        return NFC_INVALID_CALLBACK;
     }
     std::lock_guard<std::mutex> lock(callbackMutex_);
     if (callbackManager_ == nullptr) {
