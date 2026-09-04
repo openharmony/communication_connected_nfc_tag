@@ -52,6 +52,7 @@ ohos_shared_library("nfc_tag_inner_kits") {
   part_name = "connected_nfc_tag"
 }
 
+
 ohos_static_library("nfc_tag_inner_kits_test") {
   defines = global_defines
   cflags_cc = [ "--coverage" ]
