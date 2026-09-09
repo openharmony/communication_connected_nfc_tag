@@ -39,3 +39,14 @@ ohos_static_library("test_utils_static") {
   part_name = "connected_nfc_tag"
   subsystem_name = "communication"
 }
+
+ohos_static_library("test_utils_fuzz") {
+  defines = global_defines
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = []
+}
