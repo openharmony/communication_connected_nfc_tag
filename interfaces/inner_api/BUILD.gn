@@ -52,7 +52,6 @@ ohos_shared_library("nfc_tag_inner_kits") {
   part_name = "connected_nfc_tag"
 }
 
-
 ohos_static_library("nfc_tag_inner_kits_test") {
   defines = global_defines
   cflags_cc = [ "--coverage" ]
@@ -72,6 +71,35 @@ ohos_static_library("nfc_tag_inner_kits_test") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
+
+  subsystem_name = "communication"
+  part_name = "connected_nfc_tag"
+}
+
+ohos_static_library("nfc_tag_inner_kits_fuzz") {
+  defines = global_defines
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  configs = [":nfc_tag_config]
+  public_configs = [":nfc_tag_public_config"]
+  sources = [
+    "src/nfc_tag_callback_stub.cpp",
+    "src/nfc_tag_client.cpp",
+    "src/nfc_tag_proxy.cpp",
+  ]
+
+  deps = []
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_core"，
     "samgr:samgr_proxy",
   ]
 
