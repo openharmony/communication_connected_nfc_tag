@@ -95,7 +95,9 @@ ohos_static_library("nfc_tag_service_fuzz") {
     "-fno-omit-frame-pointer",
   ]
 
-  include_dirs = nfc_tag_service_source
+  include_dirs = nfc_tag_service_include_dirs
+
+  sources = nfc_tag_service_source
 
   deps = [
     "$NFC_TAG_DIR/services/src/hdi:nfc_tag_hdi_adapter_fuzz",
