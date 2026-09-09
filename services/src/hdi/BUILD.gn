@@ -82,3 +82,33 @@ ohos_static_library("nfc_tag_hdi_adapter_test") {
   subsystem_name = "communication"
   part_name = "connected_nfc_tag"
 }
+
+ohos_static_library("nfc_tag_hdi_adapter_fuzz") {
+  defines = global_defines
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+
+  include_dirs = [
+    "include",
+    "$NFC_TAG_DIR/interfaces/inner_api/include",
+    "$NFC_TAG_DIR/test/unittest/common_mock",
+    "$NFC_TAG_DIR/test/unittest/service_test/nfc_tag_hdi_adapter_test",
+  ]
+
+  sources = [
+    "src/nfc_tag_hdi_adapter.cpp",
+    "$NFC_TAG_DIR/test/unittest/service_test/nfc_tag_hdi_adapter_test/nfc_tag_hdi_impl_mock.cpp",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+
+  subsystem_name = "communication"
+  part_name = "connected_nfc_tag"
+}
