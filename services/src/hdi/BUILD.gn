@@ -91,7 +91,6 @@ ohos_static_library("nfc_tag_hdi_adapter_fuzz") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-
   include_dirs = [
     "include",
     "$NFC_TAG_DIR/interfaces/inner_api/include",
