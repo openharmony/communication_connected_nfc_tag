@@ -182,8 +182,8 @@ bool UnRegisterCallbackFuzztest(FuzzedDataProvider& fdp)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     OHOS::NFC::NfcTagAccessTokenMock::SetNativeTokenInfo();
-    FuzzedDataProvider fdp(data, size);
     OHOS::NFC::OnStartFuzztest(data, size);
+    FuzzedDataProvider fdp(data, size);
     OHOS::NFC::UnknownFuzztest(fdp);
     OHOS::NFC::InitCmdFuzztest(fdp);
     OHOS::NFC::UnInitCmdFuzztest(fdp);
