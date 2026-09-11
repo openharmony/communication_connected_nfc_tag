@@ -14,7 +14,7 @@
  */
 
 #define LOG_TAG "NFCTAG_FUZZER"
-#include "nfc_tag_service_basic_fuzzer.h"
+#include "nfctagservicebasic_fuzzer.h"
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -80,7 +80,7 @@ bool InitCmdFuzztest(FuzzedDataProvider& fdp)
     datas.WriteInterfaceToken(descriptor);
     std::vector<uint8_t> extra = fdp.ConsumeBytes<uint8_t>(
         fdp.ConsumeIntegral<uint8_t>() % 64);
-    data.WriteUInt8Vector(extra);
+    datas.WriteUInt8Vector(extra);
     return SendRequest(datas, INfcTagService::NFC_TAG_CMD_INIT);
 }
 
@@ -92,7 +92,7 @@ bool UnInitCmdFuzztest(FuzzedDataProvider& fdp)
     datas.WriteInterfaceToken(descriptor);
     std::vector<uint8_t> extra = fdp.ConsumeBytes<uint8_t>(
         fdp.ConsumeIntegral<uint8_t>() % 64);
-    data.WriteUInt8Vector(extra);
+    datas.WriteUInt8Vector(extra);
     return SendRequest(datas, INfcTagService::NFC_TAG_CMD_UNINIT);
 }
 

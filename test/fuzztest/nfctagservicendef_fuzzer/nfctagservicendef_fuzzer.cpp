@@ -68,7 +68,7 @@ bool WriteNdefTagFuzztest(FuzzedDataProvider& fdp)
     MessageParcel datas;
     std::u16string descriptor = NfcTagStub::GetDescriptor();
     datas.WriteInterfaceToken(descriptor);
-    std::string tag = fdp.ComsumeRandomLengthString(256);
+    std::string tag = fdp.ConsumeRandomLengthString(256);
     datas.WriteString(tag);
     return SendRequest(datas, INfcTagService::NFC_TAG_CMD_WRITE_NDEF_TAG);
 }

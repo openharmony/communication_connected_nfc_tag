@@ -14,16 +14,17 @@
  */
 
 #define LOG_TAG "NFCTAG_FUZZER"
-#include "nfc_tag_proxy_fuzzer.h"
+#include "nfctagproxy_fuzzer.h"
 #include <string>
 #include <sstream>
 #include <iostream>
 #include <iomanip>
 #include "nfc_tag_log.h"
 #include "nfc_tag_service.h"
+#include "nfc_tag_stub.h"
 #include "nfc_tag_callback_stub.h"
-#include "nfc_tag_proxy.h"
 #include "nfc_tag_access_token_mock.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 namespace OHOS {
 namespace NFC {
@@ -38,93 +39,140 @@ public:
 
 static sptr<NfcTagService> g_nfcTagService = nullptr;
 static sptr<NfcTagCallbackStubTest> g_nfcTagCallback = new NfcTagCallbackStubTest();
-static sptr<NfcTagProxy> g_nfcTagProxy = nullptr;
+
 bool OnStartFuzztest(const uint8_t* data, size_t size)
 {
     HILOGI("start");
     if (g_nfcTagService == nullptr) {
         g_nfcTagService =
             new NfcTagService(NFC_CONNECTED_TAG_ABILITY_ID, true);
-        g_nfcTagProxy = new NfcTagProxy(g_nfcTagService);
     }
     return true;
 }
 
-bool InitCmdFuzztest(const uint8_t* data, size_t size)
+bool SendRequest(MessageParcel &datas, uint32_t code)
 {
-    HILOGI("start");
-    if (data == nullptr) {
+    MessageParcel reply;
+    MessageOption option;
+    g_nfcTagService->OnRemoteRequest(code, datas, reply, option);
+    int exception = reply.ReadInt32();
+    if (exception != static_cast<int>(NFC_SUCCESS)) {
+        HILOGI("exception: %{public}d", exception);
         return false;
     }
-    return g_nfcTagProxy->Init();
+    HILOGI("OnRemoteRequest success");
+    return true;
 }
 
-bool UnInitCmdFuzztest(const uint8_t* data, size_t size)
+bool UnknownFuzztest(FuzzedDataProvider& fdp)
 {
     HILOGI("start");
-    if (data == nullptr) {
-        return false;
-    }
-    return g_nfcTagProxy->Uninit();
+    MessageParcel datas;
+    std::u16string descriptor = NfcTagStub::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    uint8_t code = fdp.ConsumeIntegral<uint8_t>();
+    return SendRequest(datas, static_cast<uint32_t>(code));
 }
 
-bool ReadNdefTagFuzztest(const uint8_t* data, size_t size)
+bool InitCmdFuzztest(FuzzedDataProvider& fdp)
 {
     HILOGI("start");
-    if (data == nullptr) {
-        return false;
-    }
-    std::string resp;
-    return g_nfcTagProxy->ReadNdefTag(resp);
+    MessageParcel datas;
+    std::u16string descriptor = NfcTagStub::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    std::vector<uint8_t> extra = fdp.ConsumeBytes<uint8_t>(
+        fdp.ConsumeIntegral<uint8_t>() % 64);
+    datas.WriteUInt8Vector(extra);
+    return SendRequest(datas, INfcTagService::NFC_TAG_CMD_INIT);
 }
 
-bool WriteNdefTagFuzztest(const uint8_t* data, size_t size)
+bool UnInitCmdFuzztest(FuzzedDataProvider& fdp)
 {
     HILOGI("start");
-    if (data == nullptr) {
-        return false;
-    }
-    std::string tag(data, data + size);
-    return g_nfcTagProxy->WriteNdefTag(tag);
+    MessageParcel datas;
+    std::u16string descriptor = NfcTagStub::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    std::vector<uint8_t> extra = fdp.ConsumeBytes<uint8_t>(
+        fdp.ConsumeIntegral<uint8_t>() % 64);
+    datas.WriteUInt8Vector(extra);
+    return SendRequest(datas, INfcTagService::NFC_TAG_CMD_UNINIT);
 }
 
-bool ReadNdefDataFuzztest(const uint8_t* data, size_t size)
+bool ReadNdefTagFuzztest(FuzzedDataProvider& fdp)
 {
     HILOGI("start");
-    if (data == nullptr) {
-        return false;
-    }
-    std::vector<uint8_t> resp;
-    return g_nfcTagProxy->ReadNdefData(resp);
+    MessageParcel datas;
+    std::u16string descriptor = NfcTagStub::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    std::vector<uint8_t> extra = fdp.ConsumeBytes<uint8_t>(
+        fdp.ConsumeIntegral<uint8_t>() % 64);
+    datas.WriteUInt8Vector(extra);
+    return SendRequest(datas, INfcTagService::NFC_TAG_CMD_READ_NDEF_TAG);
 }
 
-bool WriteNdefDataFuzztest(const uint8_t* data, size_t size)
+bool WriteNdefTagFuzztest(FuzzedDataProvider& fdp)
 {
     HILOGI("start");
-    if (data == nullptr) {
-        return false;
-    }
-    std::vector<uint8_t> tag(data, data + size);
-    return g_nfcTagProxy->WriteNdefData(tag);
+    MessageParcel datas;
+    std::u16string descriptor = NfcTagStub::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    std::string tag = fdp.ConsumeRandomLengthString(256);
+    datas.WriteString(tag);
+    return SendRequest(datas, INfcTagService::NFC_TAG_CMD_WRITE_NDEF_TAG);
 }
 
-bool RegisterCallbackFuzztest(const uint8_t* data, size_t size)
+bool ReadNdefDataFuzztest(FuzzedDataProvider& fdp)
 {
     HILOGI("start");
-    if (data == nullptr) {
-        return false;
-    }
-
-    return g_nfcTagProxy->RegListener(g_nfcTagCallback);
+    MessageParcel datas;
+    std::u16string descriptor = NfcTagStub::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    std::vector<uint8_t> extra = fdp.ConsumeBytes<uint8_t>(
+        fdp.ConsumeIntegral<uint8_t>() % 64);
+    datas.WriteUInt8Vector(extra);
+    return SendRequest(datas, INfcTagService::NFC_TAG_CMD_READ_NDEF_DATA);
 }
 
-bool UnRegisterCallbackFuzztest(const uint8_t* data, size_t size)
+bool WriteNdefDataFuzztest(FuzzedDataProvider& fdp)
 {
     HILOGI("start");
-    if (data == nullptr) {
-        return false;
+    MessageParcel datas;
+    std::u16string descriptor = NfcTagStub::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    std::vector<uint8_t> tag = fdp.ConsumeBytes<uint8_t>(
+        fdp.ConsumeIntegral<uint8_t>() % 256);
+    datas.WriteUInt8Vector(tag);
+    return SendRequest(datas, INfcTagService::NFC_TAG_CMD_WRITE_NDEF_DATA);
+}
+
+bool RegisterCallbackFuzztest(FuzzedDataProvider& fdp)
+{
+    HILOGI("start");
+    MessageParcel datas;
+    std::u16string descriptor = NfcTagStub::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    uint8_t useValidCallback = fdp.ConsumeIntegral<uint8_t>() % 2;
+    if (useValidCallback) {
+        datas.WriteRemoteObject(g_nfcTagCallback->AsObject());
+    } else {
+        datas.WriteRemoteObject(nullptr);
     }
-    return g_nfcTagProxy->UnregListener(g_nfcTagCallback);
+    return SendRequest(datas, INfcTagService::NFC_TAG_CMD_REGISTER_CALLBACK);
+}
+
+bool UnRegisterCallbackFuzztest(FuzzedDataProvider& fdp)
+{
+    HILOGI("start");
+    MessageParcel datas;
+    std::u16string descriptor = NfcTagStub::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    uint8_t useValidCallback = fdp.ConsumeIntegral<uint8_t>() % 2;
+    if (useValidCallback) {
+        datas.WriteRemoteObject(g_nfcTagCallback->AsObject());
+    } else {
+        datas.WriteRemoteObject(nullptr);
+    }
+    return SendRequest(datas, INfcTagService::NFC_TAG_CMD_UNREGISTER_CALLBACK);
 }
 
 }  // namespace NFC
@@ -134,14 +182,15 @@ bool UnRegisterCallbackFuzztest(const uint8_t* data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     OHOS::NFC::NfcTagAccessTokenMock::SetNativeTokenInfo();
-    OHOS::NFC::OnStartFuzztest(data, size);
-    OHOS::NFC::InitCmdFuzztest(data, size);
-    OHOS::NFC::ReadNdefTagFuzztest(data, size);
-    OHOS::NFC::WriteNdefTagFuzztest(data, size);
-    OHOS::NFC::ReadNdefDataFuzztest(data, size);
-    OHOS::NFC::WriteNdefDataFuzztest(data, size);
-    OHOS::NFC::RegisterCallbackFuzztest(data, size);
-    OHOS::NFC::UnRegisterCallbackFuzztest(data, size);
-    OHOS::NFC::UnInitCmdFuzztest(data, size);
+    FuzzedDataProvider fdp(data, size);
+    OHOS::NFC::UnknownFuzztest(fdp);
+    OHOS::NFC::InitCmdFuzztest(fdp);
+    OHOS::NFC::UnInitCmdFuzztest(fdp);
+    OHOS::NFC::ReadNdefTagFuzztest(fdp);
+    OHOS::NFC::WriteNdefTagFuzztest(fdp);
+    OHOS::NFC::ReadNdefDataFuzztest(fdp);
+    OHOS::NFC::WriteNdefDataFuzztest(fdp);
+    OHOS::NFC::RegisterCallbackFuzztest(fdp);
+    OHOS::NFC::UnRegisterCallbackFuzztest(fdp);
     return 0;
 }
