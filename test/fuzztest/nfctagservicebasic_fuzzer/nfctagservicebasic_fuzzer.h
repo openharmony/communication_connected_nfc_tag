@@ -16,5 +16,5 @@
 #ifndef NFCTAGSERVICEBASIC_FUZZER_H
 #define NFCTAGSERVICEBASIC_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "nfc_tag_service_basic_fuzzer"
+#define FUZZ_PROJECT_NAME "nfctagservicebasic_fuzzer"
 #endif // NFCTAGSERVICEBASIC_FUZZER_H
