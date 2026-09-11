@@ -43,7 +43,6 @@ bool OnStartFuzztest(const uint8_t* data, size_t size)
     if (g_nfcTagService == nullptr) {
         g_nfcTagService =
             new NfcTagService(NFC_CONNECTED_TAG_ABILITY_ID, true);
-        g_nfcTagService->OnStart();
     }
     return true;
 }
