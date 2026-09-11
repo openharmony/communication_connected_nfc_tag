@@ -85,3 +85,26 @@ ohos_static_library("nfc_tag_service_test") {
   part_name = "connected_nfc_tag"
   subsystem_name = "communication"
 }
+
+ohos_static_library("nfc_tag_service_fuzz") {
+  defines = global_defines
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+
+  include_dirs = nfc_tag_service_include_dirs
+
+  sources = nfc_tag_service_source
+
+  deps = [
+    "$NFC_TAG_DIR/services/src/hdi:nfc_tag_hdi_adapter_fuzz",
+  ]
+
+  external_deps = nfc_tag_service_external_deps
+
+  part_name = "connected_nfc_tag"
+  subsystem_name = "communication"
+}

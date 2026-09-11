@@ -39,3 +39,29 @@ ohos_static_library("test_utils_static") {
   part_name = "connected_nfc_tag"
   subsystem_name = "communication"
 }
+
+ohos_static_library("test_utils_fuzz") {
+  defines = global_defines
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "nfc_tag_access_token_mock.cpp",
+  ]
+  include_dirs = [
+    "$NFC_TAG_DIR/interfaces/inner_api/include",
+  ]
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken",
+    "access_token:libtoken_setproc",
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+
+  part_name = "connected_nfc_tag"
+  subsystem_name = "communication"
+}
