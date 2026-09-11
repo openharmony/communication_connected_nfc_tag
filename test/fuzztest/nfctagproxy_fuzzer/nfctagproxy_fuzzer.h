@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef NFC_TAG_PROXY_FUZZER_H
-#define NFC_TAG_PROXY_FUZZER_H
+#ifndef NFCTAGPROXY_FUZZER_H
+#define NFCTAGPROXY_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "nfc_tag_proxy_fuzzer"
-#endif // NFC_TAG_PROXY_FUZZER_H
+#define FUZZ_PROJECT_NAME "nfctagproxy_fuzzer"
+#endif // NFCTAGPROXY_FUZZER_H
