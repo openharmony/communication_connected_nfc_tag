@@ -79,7 +79,7 @@ bool InitCmdFuzztest(FuzzedDataProvider& fdp)
     std::u16string descriptor = NfcTagStub::GetDescriptor();
     datas.WriteInterfaceToken(descriptor);
     std::vector<uint8_t> extra = fdp.ConsumeBytes<uint8_t>(
-        fdp.ConsumeIntegral<uint8_t>() % 64);
+        fdp.ConsumeIntegral<uint8_t>() % MAX_EXTRA_LEN);
     datas.WriteUInt8Vector(extra);
     return SendRequest(datas, INfcTagService::NFC_TAG_CMD_INIT);
 }
@@ -91,7 +91,7 @@ bool UnInitCmdFuzztest(FuzzedDataProvider& fdp)
     std::u16string descriptor = NfcTagStub::GetDescriptor();
     datas.WriteInterfaceToken(descriptor);
     std::vector<uint8_t> extra = fdp.ConsumeBytes<uint8_t>(
-        fdp.ConsumeIntegral<uint8_t>() % 64);
+        fdp.ConsumeIntegral<uint8_t>() % MAX_EXTRA_LEN);
     datas.WriteUInt8Vector(extra);
     return SendRequest(datas, INfcTagService::NFC_TAG_CMD_UNINIT);
 }
@@ -103,7 +103,7 @@ bool ReadNdefTagFuzztest(FuzzedDataProvider& fdp)
     std::u16string descriptor = NfcTagStub::GetDescriptor();
     datas.WriteInterfaceToken(descriptor);
     std::vector<uint8_t> extra = fdp.ConsumeBytes<uint8_t>(
-        fdp.ConsumeIntegral<uint8_t>() % 64);
+        fdp.ConsumeIntegral<uint8_t>() % MAX_EXTRA_LEN);
     datas.WriteUInt8Vector(extra);
     return SendRequest(datas, INfcTagService::NFC_TAG_CMD_READ_NDEF_TAG);
 }
@@ -115,7 +115,7 @@ bool ReadNdefDataFuzztest(FuzzedDataProvider& fdp)
     std::u16string descriptor = NfcTagStub::GetDescriptor();
     datas.WriteInterfaceToken(descriptor);
     std::vector<uint8_t> extra = fdp.ConsumeBytes<uint8_t>(
-        fdp.ConsumeIntegral<uint8_t>() % 64);
+        fdp.ConsumeIntegral<uint8_t>() % MAX_EXTRA_LEN);
     datas.WriteUInt8Vector(extra);
     return SendRequest(datas, INfcTagService::NFC_TAG_CMD_READ_NDEF_DATA);
 }
