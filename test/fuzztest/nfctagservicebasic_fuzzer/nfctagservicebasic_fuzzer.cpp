@@ -28,6 +28,8 @@
 namespace OHOS {
 namespace NFC {
 
+static constexpr uint16_t MAX_EXTRA_LEN = 64;
+
 class NfcTagCallbackStubTest : public NfcTagCallbackStub {
 public:
     ErrCode OnNotify(int nfcRfState) override
