@@ -30,7 +30,7 @@ namespace OHOS {
 namespace NFC {
 
 static constexpr uint16_t MAX_DATA_LEN = 256;
-static constexpr uint16_t MAX_EXTRA_LEN = 64;
+static constexpr uint8_t MAX_EXTRA_LEN = 64;
 
 class NfcTagCallbackStubTest : public NfcTagCallbackStub {
 public:
