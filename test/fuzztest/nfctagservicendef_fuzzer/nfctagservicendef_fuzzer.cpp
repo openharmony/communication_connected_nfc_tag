@@ -28,6 +28,9 @@
 namespace OHOS {
 namespace NFC {
 
+static constexpr uint16_t MAX_DATA_LEN = 256;
+static constexpr uint16_t MAX_EXTRA_LEN = 64;
+
 class NfcTagCallbackStubTest : public NfcTagCallbackStub {
 public:
     ErrCode OnNotify(int nfcRfState) override
@@ -68,7 +71,7 @@ bool WriteNdefTagFuzztest(FuzzedDataProvider& fdp)
     MessageParcel datas;
     std::u16string descriptor = NfcTagStub::GetDescriptor();
     datas.WriteInterfaceToken(descriptor);
-    std::string tag = fdp.ConsumeRandomLengthString(256);
+    std::string tag = fdp.ConsumeRandomLengthString(MAX_DATA_LEN);
     datas.WriteString(tag);
     return SendRequest(datas, INfcTagService::NFC_TAG_CMD_WRITE_NDEF_TAG);
 }
@@ -80,7 +83,7 @@ bool WriteNdefDataFuzztest(FuzzedDataProvider& fdp)
     std::u16string descriptor = NfcTagStub::GetDescriptor();
     datas.WriteInterfaceToken(descriptor);
     std::vector<uint8_t> tag = fdp.ConsumeBytes<uint8_t>(
-        fdp.ConsumeIntegral<uint8_t>() % 256);
+        fdp.ConsumeIntegral<uint8_t>() % MAX_DATA_LEN);
     datas.WriteUInt8Vector(tag);
     return SendRequest(datas, INfcTagService::NFC_TAG_CMD_WRITE_NDEF_DATA);
 }
