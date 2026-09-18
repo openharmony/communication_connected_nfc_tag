@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <functional>
 #include <mutex>
 
 #include "infc_tag_callback.h"
@@ -63,6 +64,7 @@ public:
     ErrCode RegisterCallBack(sptr<INfcTagCallback> listener);
     ErrCode UnRegisterCallBack(sptr<INfcTagCallback> listener);
     ErrCode InitDriver();
+    void SetInitCompleteListener(std::function<void() listener>);
     void OnNfcTagDriverStart();
     void OnNfcTagDriverStop();
 private:
@@ -72,6 +74,8 @@ private:
 private:
     void OnDriverManagerAdd();
     void OnDriverManagerRemove();
+    std::mutex initListenerMutext_;
+    std::function<void()> SetInitCompleteListener_ = nullptr;
     sptr<SystemAbilityListener> driverManagerStatusListener_ = nullptr;
     sptr<OHOS::HDI::ServiceManager::V1_0::ServStatListenerStub> nfcTagDriverStatusListener_ = nullptr;
 };

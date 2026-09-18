@@ -102,6 +102,9 @@ ErrCode NfcTagHdiImpl::InitDriver()
     return g_errCodeMock;
 }
 
+void NfcTagHdiImpl::SetInitCompleteListener(std::function<void()> listener)
+{}
+
 void NfcTagHdiImpl::OnNfcTagDriverStart()
 {}
 
