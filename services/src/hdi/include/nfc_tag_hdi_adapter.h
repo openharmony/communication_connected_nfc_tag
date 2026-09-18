@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <functional>
 
 #include "infc_tag_callback.h"
 #include "nfc_tag_errcode.h"
@@ -43,6 +44,8 @@ public:
     ErrCode UnRegisterCallBack(sptr<INfcTagCallback> listener);
 public:
     ErrCode InitDriver();
+
+    void SetInitCompleteListener(std::function<void()> listener);
 };
 }  // namespace NFC
 }  // namespace OHOS

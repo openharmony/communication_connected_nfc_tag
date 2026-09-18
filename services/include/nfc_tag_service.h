@@ -18,6 +18,7 @@
 
 #include <mutex>
 #include <map>
+#include <atomic>
 #include "system_ability.h"
 #include "nfc_tag_stub.h"
 #include "iremote_object.h"
@@ -77,12 +78,14 @@ public:
 private:
     bool ServiceInit();
     ErrCode VerifyPermissionsBeforeEntry();
+    void NotifyInitComplete();
 private:
     NfcTagHdiAdapter hdiAdapter_;
     bool published_;
     ServiceRunningState state_;
     sptr<NfcTagCallBackManager> callbackManager_;
     std::mutex callbackMutex_;
+    std::atomic<bool> initComplete_ {false};
 };
 }  // namespace NFC
 }  // namespace OHOS

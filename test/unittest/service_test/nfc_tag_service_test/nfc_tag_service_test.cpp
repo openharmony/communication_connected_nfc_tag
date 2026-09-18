@@ -103,6 +103,9 @@ ErrCode NfcTagHdiAdapter::InitDriver()
     return g_hdiCodeMock;
 }
 
+void NfcTagHdiAdapter::SetInitCompleteListener(std::function<void()> listener)
+{}
+
 NfcTagStub::NfcTagStub()
 {}
 
@@ -306,6 +309,30 @@ HWTEST_F(NfcTagCallBackManagerTest, NfcTagCallBackManagerTest_UnRegisterListener
     EXPECT_EQ(ret, NFC_CALLBACK_NOT_EQUAL);
     GTEST_LOG_(INFO) << "NfcTagCallBackManagerTest_UnRegisterListener_002 end";
 }
+
+/*
+ * @tc.number: NfcTagServiceTest_NotifyInitComplete_001
+ * @tc.name: NfcTagServiceTest_NotifyInitComplete_001
+ * @tc.desc: defferd listener, RegisterCallback success, broadcast event 3
+*/
+HWTEST_F(NfcTagServiceTest, NfcTagServiceTest_NotifyInitComplete_001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "NfcTagServiceTest_NotifyInitComplete_001 start";
+    IPCSkeleton::callingFullTokenId_ = 123456789;
+    NfcTagServiceMock service(123, true);
+    g_isGrantedMock - true;
+    g_verifyPermissionMock = NFC_SUCCESS;
+    g_hdiCodeMock = NFC_SUCCESS;
+    sptr<INfcTagCallbackTest> callbackTest = sprt<INfcTagCallbackTest>::MakeSptr;
+    EXPECT_EQ(service.RegListener(callbackTest), NFC_SUCCESS);
+    EXPECT_EQ(service.initComplete_, false);
+    service.NotifyInitComplete();
+    EXPECT_EQ(service.initComplete_, true);
+    EXPECT_EQ(callbackTest->notifyCount_, 1);
+    EXPECT_EQ(callbackTest->lastEvent_, NFC_TAG_EVENT_INIT_COMPLETE);
+    GTEST_LOG_(INFO) << "NfcTagServiceTest_NotifyInitComplete_001 end";
+}
+
 
 /*
  * @tc.number: NfcTagCallBackManagerTest_OnNotify_001
