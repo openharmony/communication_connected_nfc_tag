@@ -118,6 +118,7 @@ void NfcTagService::OnStart()
         HILOGI("Service has already started.");
         return;
     }
+    hdiAdapter_.SetInitCompleteListener([this]() { NotifyInitComplete(); });
     ErrCode errCode = hdiAdapter_.InitDriver();
     HILOGI("hdiAdapter_.InitDriver: %{public}d", errCode);
     if (!ServiceInit()) {
@@ -140,7 +141,26 @@ void NfcTagService::OnStop()
     }
     state_ = ServiceRunningState::STATE_NOT_START;
     published_ = false;
+    initComplete_ = false;
     HILOGI("Stop service!");
+}
+
+void NfcTagService::NotifyInitComplete()
+{
+    HILOGI("enter");
+    std::lock_guard<std::mutex> lock(callbackMutex_);
+    if (callbackManager_ != nullptr) {
+        ErrCode hdiCode = hdiAdapter_.RegisterCallBack(callbackManager_);
+        if (hdiCode != NFC_SUCCESS) {
+            HILOGE("RegisterCallBack in NotifyInitComplete failed: %{public}d", hdiCode);
+            return;
+        }
+    }
+    initComplete_ = true;
+    if (callbackManager_ != nullptr) {
+        callbackManager_->OnNotify(NFC_TAG_EVENT_INIT_COMPLETE);
+    }
+    }
 }
 
 bool NfcTagService::ServiceInit()
@@ -180,7 +200,11 @@ ErrCode NfcTagService::Init()
     if (ret != NFC_SUCCESS) {
         return ret;
     }
-    return hdiAdapter_.Init();
+    ErrCode errCode = hdiAdapter_.Init();
+    if (errCode == NFC_SUCCESS) {
+        NotifyInitComplete();
+    }
+    return errCode;
 }
 
 ErrCode NfcTagService::Uninit()
@@ -248,11 +272,15 @@ ErrCode NfcTagService::RegListener(const sptr<INfcTagCallback> &callback)
     }
     ErrCode errCode = callbackManager_->RegisterListener(callback);
     if (errCode == NFC_SUCCESS) {
-        ErrCode hdiCode = hdiAdapter_.RegisterCallBack(callbackManager_);
-        if (hdiCode != NFC_SUCCESS) {
-            callbackManager_->UnRegisterListener(callback);
+        if (initComplete_) {
+            ErrCode hdiCode = hdiAdapter_.RegisterCallBack(callbackManager_);
+            if (hdiCode != NFC_SUCCESS) {
+                callbackManager_->UnRegisterListener(callback);
+                return hdiCode;
+            }
+            callback->OnNotify(NFC_TAG_EVENT_INIT_COMPLETE);
         }
-        return hdiCode;
+        return NFC_SUCCESS;
     }
     return errCode;
 }
@@ -277,7 +305,10 @@ ErrCode NfcTagService::UnregListener(const sptr<INfcTagCallback> &callback)
     }
     ErrCode errCode = callbackManager_->UnRegisterListener(callback);
     if (errCode == NFC_SUCCESS) {
-        return hdiAdapter_.UnRegisterCallBack(callbackManager_);
+        if (initComplete_) {
+            return hdiAdapter_.UnRegisterCallBack(callbackManager_);
+        }
+        return NFC_SUCCESS;
     }
     return errCode;
 }
