@@ -308,10 +308,24 @@ void NfcTagHdiImpl::OnDriverManagerRemove()
     OnNfcTagDriverStop();
 }
 
+void NfcTagHdiImpl::SetInitCompleteListener(std::function<void()> listener)
+{
+    std::lock_guard<std::mutex> lock(initListenerMutex_);
+    initCompleteListener_ = std::move(listener);
+}
+
 void NfcTagHdiImpl::OnNfcTagDriverStart()
 {
     HILOGI("enter");
     Init();
+    if (ret != NFC_SUCCESS) {
+        HILOGE("Init failed: %{public}d", ret);
+        return;
+    }
+    std::lock_guard<std::mutex> lock(initListenerMutex_);
+    if (initCompleteListener_ != nullptr) {
+        initCompleteListener_();
+    }
 }
 
 void NfcTagHdiImpl::OnNfcTagDriverStop()

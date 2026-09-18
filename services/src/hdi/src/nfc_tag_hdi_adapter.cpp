@@ -64,5 +64,9 @@ ErrCode NfcTagHdiAdapter::InitDriver()
     return NfcTagHdiImpl::GetInstance().InitDriver();
 }
 
+void NfcTagHdiAdapter::SetInitCompleteListener(std::function<void()> listener)
+{
+    NfcTagHdiImpl::GetInstance().SetInitCompleteListener(std::move(listener));
+}
 }  // namespace NFC
 }  // namespace OHOS
