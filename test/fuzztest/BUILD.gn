@@ -16,7 +16,8 @@ import("//build/test.gni")
 group("fuzztest") {
   testonly = true
   deps = [
-    "service_fuzzer:ServiceFuzzTest",
-    "framework_fuzzer:FrameworkFuzzTest",
+    "nfctagservicebasic_fuzzer:NfcTagServiceBasicFuzzTest",
+    "nfctagservicendef_fuzzer:NfcTagServiceNdefFuzzTest",
+    "nfctagproxy_fuzzer:NfcTagProxyFuzzTest",
   ]
 }
